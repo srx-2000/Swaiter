@@ -1,0 +1,4 @@
+dist/
+Swaiter.egg-info/
+__pycache__/
+pyproject.toml
