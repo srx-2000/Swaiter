@@ -2,6 +2,7 @@ import time
 from loguru import logger
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 
 
 class Waiter(object):
@@ -28,6 +29,39 @@ class Waiter(object):
     def _loger(self, message, level="info"):
         if self.is_log:
             getattr(logger, level)(message)
+
+    def _select_input_waiter(self, xpath: str, way="value", **kwargs):
+        """
+        通过xpath和way选定selector，并将kwargs得到的值填入其中。
+        :param xpath:
+        :param way: 有三种方法选择：value，index，text，默认为value
+        :param kwargs:
+        :return:
+        """
+        assert len(kwargs.values()) == 1, "select param takes 1 positional arguments but more or less were given"
+        selector = Select(self.driver.find_element(By.XPATH, xpath))
+        opt_value = next(iter(kwargs.values()))
+        if way == "value":
+            selector.select_by_value(opt_value)
+        elif way == "index":
+            selector.select_by_index(opt_value)
+        else:
+            selector.select_by_visible_text(opt_value)
+
+    def _select_option_waiter(self, xpath, opt_type="all") -> list:
+        value_list = []
+        selector = Select(self.driver.find_element(By.XPATH, xpath))
+        if opt_type == "first":
+            value_list.append(selector.first_selected_option.text)
+        else:
+            if opt_type == "all":
+                value_list.append(selector.first_selected_option.text)
+                options = selector.options
+            elif opt_type == "select_all":
+                options = selector.all_selected_options
+            for option in options:
+                value_list.append(option.text)
+        return value_list
 
     def _username_input_waiter(self, xpath: str, **kwargs):
         self._input_send_waiter(xpath, **kwargs)
@@ -62,6 +96,13 @@ class Waiter(object):
     def click_waiter(self, xpath: str):
         self.wait(func="_click_waiter", xpath=xpath)
 
+    def select_input_waiter(self, xpath: str, way="value", **kwargs):
+        self.wait(func="_select_input_waiter", xpath=xpath, way=way, **kwargs)
+
+    def select_option_waiter(self, xpath, opt_type="all"):
+        option_list = self._get_value(func="_select_option_waiter", xpath=xpath, opt_type=opt_type)
+        return option_list
+
     def elements_text_waiter(self, xpath: str, attribute=None) -> str:
         """
         循环等待搜索函数获取结果
@@ -69,10 +110,14 @@ class Waiter(object):
         @param xpath:
         @return:
         """
+        element_text = self.wait(func="_element_text_waiter", xpath=xpath, attribute=attribute)
+        return element_text
+
+    def _get_value(self, xpath: str, func, **kwargs):
         while True:
-            element_text = self.wait(func="_element_text_waiter", xpath=xpath, attribute=attribute)
-            if element_text:
-                return element_text
+            result = self.wait(func=func, xpath=xpath, **kwargs)
+            if result:
+                return result
             time.sleep(1)
 
     def wait(self, func: str, xpath, interval=None, **kwargs):
@@ -103,4 +148,3 @@ class Waiter(object):
             self._loger(level="error", message=e.args)
             if self.is_track:
                 raise e
-

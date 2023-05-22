@@ -74,11 +74,21 @@ class MyWaiter(Waiter):
 
 ## 版本
 
+#### 2023.5.22
+
+**Version-1.0.4**
+
+- 添加select组件的搜索器
+  - 添加获取组件所有选项
+  - 添加向select组件中输入值
+
+[1.0.4](https://pypi.org/project/Swaiter/1.0.4/)
+
 #### 2023.5.16
 
 **Version-1.0.3**
 
 完成基础功能
 
-​	[1.0.3](https://pypi.org/project/Swaiter/1.0.3/)
+[1.0.3](https://pypi.org/project/Swaiter/1.0.3/)
 
